@@ -8,6 +8,9 @@ using System.Text;
 using Substrate.NetApi;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Yaml;
+using Substrate.Ordinals.Bot.Model;
+using System.Text.Json;
+using System.Runtime.InteropServices;
 
 namespace Substrate.Ordinals.Bot
 {
@@ -95,6 +98,16 @@ namespace Substrate.Ordinals.Bot
             var account = Mnemonic.GetAccountFromMnemonic(mnemonicSeed, "", KeyType.Sr25519);
             Log.Information("Account Initialized: {account}", account.Value);
 
+            var ordinalMint = new OrdinalMint() {
+                Protocol = "pdc-20",
+                Operation = "mint",
+                Ticker = "300",
+                Amount = "300"
+            };
+
+            var ordinalMintSerialized = JsonSerializer.Serialize(ordinalMint);
+            Log.Information("Ordinal JSON: {json}", ordinalMintSerialized);
+
             while (true)
             {
                 SubstrateNetwork client = new SubstrateNetwork(account, NetworkType.Live, webSocketUrl);
@@ -124,13 +137,7 @@ namespace Substrate.Ordinals.Bot
                         }
                         Log.Information("Account found on chain. Balance: " + accountData.Data.Free.ToString());
 
-                        var bytes = ASCIIEncoding.ASCII.GetBytes("" +
-                            "{" +
-                            "\"p\":\"" + ordinalType + "\"," +
-                            "\"op\":\"" + ordinalOperation + "\"," +
-                            "\"tick\":\"" + ordinalTicker + "\"," +
-                            "\"amt\":\"" + ordinalAmount + "\"}");
-
+                        var bytes = ASCIIEncoding.ASCII.GetBytes(ordinalMintSerialized);
                         var baseVec = new BaseVec<U8>();
                         baseVec.Create(bytes.Select(p => new U8(p)).ToArray());
 
