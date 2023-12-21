@@ -1,9 +1,0 @@
-﻿# config.yml
-mnemnonic:
- ord1: ""
- ord2: ""
- ord3: ""
-endpoints:
- wss1: ""
- wss2: ""
- wss3: ""
