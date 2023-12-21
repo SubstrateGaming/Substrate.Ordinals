@@ -56,9 +56,9 @@ namespace Substrate.Ordinals.Bot
 
         static async Task MainAsync(IConfigurationRoot config, CancellationToken token)
         {
-            Log.Information("Ordinal Wallet (1-3): ");
+            Log.Information("Ordinal Wallet: ");
             var ordAccount = Console.ReadLine();
-            if (!int.TryParse(ordAccount, out int ordAccountResult) && ordAccountResult > 0 && ordAccountResult < 4)
+            if (!int.TryParse(ordAccount, out int ordAccountResult))
             {
                 throw new NotSupportedException("Invalid choice.");
             }
@@ -88,7 +88,9 @@ namespace Substrate.Ordinals.Bot
                 throw new NotSupportedException("Invalid choice.");
             }
 
-            var webSocketUrl = config[$"endpoints:ord{chhoiceUrlResult}"];
+            var webSocketUrl = config[$"endpoints:wss{chhoiceUrlResult}"];
+
+            Log.Information("WebSocket URL: {rpcendpoint}", webSocketUrl);
 
             var account = Mnemonic.GetAccountFromMnemonic(mnemonicSeed, "", KeyType.Sr25519);
             Log.Information("Account Initialized: {account}", account.Value);
