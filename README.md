@@ -2,7 +2,9 @@
 
 ## How to use
 
-### Create a `config.yml` in the `Substrate.Ordinals.Integration` project
+### Configuration
+
+Create a `config.yml` in the `Substrate.Ordinals.Integration` project
 
 ```yaml
 # config.yml
