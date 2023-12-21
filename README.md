@@ -12,4 +12,4 @@ mnemnonic:
  ord3: "<memnonic you want to use>"
 ```
 
-2. Launch or build the project project
+2. Launch or build the project
