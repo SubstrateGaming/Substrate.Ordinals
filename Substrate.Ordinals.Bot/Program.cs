@@ -11,6 +11,9 @@ using Microsoft.Extensions.Configuration.Yaml;
 using Substrate.Ordinals.Bot.Model;
 using System.Text.Json;
 using System.Runtime.InteropServices;
+using Substrate.Integration.Call;
+using Substrate.Polkadot.NET.NetApiExt.Generated.Model.polkadot_runtime;
+using System.Numerics;
 
 namespace Substrate.Ordinals.Bot
 {
@@ -98,17 +101,28 @@ namespace Substrate.Ordinals.Bot
             var account = Mnemonic.GetAccountFromMnemonic(mnemonicSeed, "", KeyType.Sr25519);
             Log.Information("Account Initialized: {account}", account.Value);
 
-            var ordinalMint = new OrdinalMint() {
-                Protocol = "pdc-20",
+            //var ordinalMint = new OrdinalMint() {
+            //    Protocol = "pdc-20",
+            //    Operation = "mint",
+            //    Ticker = "300",
+            //    Amount = "300"
+            //};
+
+            var utilityBatch = true;
+
+            var ordinalMint = new OrdinalSingleMint()
+            {
+                Protocol = "dot-20",
                 Operation = "mint",
-                Ticker = "300",
-                Amount = "300"
+                Ticker = "DOTA"
             };
 
             var ordinalMintSerialized = JsonSerializer.Serialize(ordinalMint);
             Log.Information("Ordinal JSON: {json}", ordinalMintSerialized);
 
-            while (true)
+            BigInteger funds = 12000000000;
+            BigInteger limitFunds = 11000000000;
+            while (funds > limitFunds)
             {
                 SubstrateNetwork client = new SubstrateNetwork(account, NetworkType.Live, webSocketUrl);
                 try
@@ -135,7 +149,8 @@ namespace Substrate.Ordinals.Bot
                             Log.Information("Account not found on chain. Please fund the account and try again.");
                             return;
                         }
-                        Log.Information("Account found on chain. Balance: " + accountData.Data.Free.ToString());
+                        funds = accountData.Data.Free;
+                        Log.Information("Account found on chain. Balance: {balance}", ((double)funds / Math.Pow(10, 10)));
 
                         var bytes = ASCIIEncoding.ASCII.GetBytes(ordinalMintSerialized);
                         var baseVec = new BaseVec<U8>();
@@ -144,7 +159,25 @@ namespace Substrate.Ordinals.Bot
                         // Submit and watch transaction
                         Log.Information("Submitting transaction...");
                         var cancellationTokenSource = new CancellationTokenSource();
-                        var subscriptionId1 = await client.RemarkWithEventAsync(baseVec, 10, cancellationTokenSource.Token);
+
+                        string? subscriptionId1 = null;
+
+                        if (utilityBatch)
+                        {
+                            var calls = new List<EnumRuntimeCall>
+                            {
+                                PalletBalances.TransferKeepAlive(account.ToAccountId32(), new BigInteger(0)),
+                                FrameSystem.Remark(baseVec)
+                            };
+
+                            subscriptionId1 = await client.BatchAllAsync(calls, 10, cancellationTokenSource.Token);
+                        }
+                        else
+                        {
+                            //subscriptionId1 = await client.RemarkWithEventAsync(baseVec, 10, cancellationTokenSource.Token);
+                            subscriptionId1 = await client.RemarksAsync(baseVec, 10, cancellationTokenSource.Token);
+                        }
+
 
                         if (subscriptionId1 == null)
                         {
@@ -154,7 +187,7 @@ namespace Substrate.Ordinals.Bot
 
                         Log.Information("RemarksAsync submitted. Subscription ID: {subscriptionId1}", subscriptionId1);
 
-                        for (var j = 0; j < 10; j++)
+                        for (int j = 0; j < 10; j++)
                         {
                             var info = client.ExtrinsicManager.Get(subscriptionId1);
                             Console.WriteLine($"[{info.Index}][{info.LastUpdated}] {info.ExtrinsicType} {info.TransactionEvent}");
@@ -163,7 +196,7 @@ namespace Substrate.Ordinals.Bot
                                 Log.Information("Transaction included in block.");
                                 break;
                             }
-                            else if (info.TransactionEvent == Substrate.NetApi.Model.Rpc.TransactionEvent.Invalid)
+                            else if (info.TransactionEvent == NetApi.Model.Rpc.TransactionEvent.Invalid)
                             {
                                 Log.Information("Transaction failed.");
                                 Thread.Sleep(3000);

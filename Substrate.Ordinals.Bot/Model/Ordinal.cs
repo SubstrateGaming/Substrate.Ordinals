@@ -39,4 +39,16 @@ namespace Substrate.Ordinals.Bot.Model
         [JsonPropertyName("amt")]
         public string Amount { get; set; }
     }
+
+    public class OrdinalSingleMint
+    {
+        [JsonPropertyName("p")]
+        public string Protocol { get; set; }
+
+        [JsonPropertyName("op")]
+        public string Operation { get; set; }
+
+        [JsonPropertyName("tick")]
+        public string Ticker { get; set; }
+    }
 }

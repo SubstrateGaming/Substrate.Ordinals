@@ -3,9 +3,8 @@
 		<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	</PropertyGroup>
-
 	<ItemGroup>
-		<PackageReference Include="Substrate.NET.API" Version="0.9.12" />
+	  <PackageReference Include="Substrate.NET.API" Version="0.9.13" />
 	</ItemGroup>
 
 </Project>
